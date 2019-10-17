@@ -1,19 +1,8 @@
-#include "ciphers.h"
-#include <string.h>
-#include <openssl/md5.h>
+#include "sign.h"
 
-
-void str2MD5(char *str, int length, uint8_t *digest)
+void make_sign_rsa(char *in, char *out, int_least64_t c, int_least64_t n)
 {
-    MD5_CTX hMD5;
-    MD5_Init(&hMD5);
-    MD5_Update(&hMD5, str, length);
-    MD5_Final(digest, &hMD5);
-}
-
-void make_sign(char *in, char *out, int_least64_t c, int_least64_t n)
-{
-    uint8_t digest[MD5_DIGEST_LENGTH];
+    uint8_t digest[LENGTH];
     char buffer[512];
     memset (buffer, 0, sizeof(buffer)); 
     int i, flag = 1;
@@ -23,9 +12,9 @@ void make_sign(char *in, char *out, int_least64_t c, int_least64_t n)
     {
         if(fread(buffer, sizeof(char), 512, fin) != 512) 
             if(feof(fin)) flag = 0;
-        str2MD5(buffer, sizeof(buffer), digest);
+        str2(buffer, sizeof(buffer), digest);
     }
-    for (i = 0; i < MD5_DIGEST_LENGTH; i++)
+    for (i = 0; i < LENGTH; i++)
     {
         
         fprintf(fout, "%"PRId64" ", modpow(digest[i], c, n));
@@ -34,9 +23,9 @@ void make_sign(char *in, char *out, int_least64_t c, int_least64_t n)
     fclose(fout);
 }
 
-void check_sign(char *in, char *out, int_least64_t d, int_least64_t n)
+void check_sign_rsa(char *in, char *out, int_least64_t d, int_least64_t n)
 {
-    uint8_t digest[MD5_DIGEST_LENGTH], test_sign[MD5_DIGEST_LENGTH];
+    uint8_t digest[LENGTH], test_sign[LENGTH];
     int_least64_t tmp;
     char buffer[512];
     memset (buffer, 0, sizeof(buffer)); 
@@ -47,22 +36,19 @@ void check_sign(char *in, char *out, int_least64_t d, int_least64_t n)
     {
         if(fread(buffer, sizeof(char), 512, fin) != 512) 
             if(feof(fin)) flag = 0;
-        str2MD5(buffer, sizeof(buffer), digest);
+        str2(buffer, sizeof(buffer), digest);
     }
     while(fscanf(fout, "%"PRId64, &tmp) != EOF)
     {
         test_sign[i] = (modpow(tmp, d, n));
         i++;
     }
-    for(i = 0; i < MD5_DIGEST_LENGTH; i++)
+    for(i = 0; i < LENGTH; i++)
     {
         if(test_sign[i] != digest[i])
             printf("ERROR\n");
     }
-    for (i = 0; i < MD5_DIGEST_LENGTH; i++)
-        printf("%02x", test_sign[i]);
-    printf("\n");
-    for (i = 0; i < MD5_DIGEST_LENGTH; i++)
+    for (i = 0; i < LENGTH; i++)
         printf("%02x", digest[i]);
     printf("\n");
     fclose(fin);
@@ -89,16 +75,16 @@ int main(int argc, char *argv[])
             break;  
         case 2:
             rsa_load_private_key(&n, &c);
-            make_sign(argv[1], "tmp/sign_rsa", c, n);
+            make_sign_rsa(argv[1], "tmp/sign_rsa", c, n);
             break;
         case 3:
             rsa_load_public_key(&n, &d);
-            check_sign(argv[1], "tmp/sign_rsa", d, n);
+            check_sign_rsa(argv[1], "tmp/sign_rsa", d, n);
             break;
         case 4:
             rsa_generate(&n, &c, &d);
-            make_sign(argv[1], "tmp/sign_rsa", c, n);
-            check_sign(argv[1], "tmp/sign_rsa", d, n);
+            make_sign_rsa(argv[1], "tmp/sign_rsa", c, n);
+            check_sign_rsa(argv[1], "tmp/sign_rsa", d, n);
             break;        
     }    
     exit(0);

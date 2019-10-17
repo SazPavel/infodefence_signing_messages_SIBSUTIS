@@ -1,7 +1,5 @@
-#include "ciphers.h"
-#include <string.h>
-#include <math.h>
-#include <openssl/md5.h>
+#include "sign.h"
+
 
 void lgamal_sign_generate(int_least64_t p, int_least64_t *c, int_least64_t *d)
 {
@@ -15,21 +13,13 @@ void lgamal_sign_generate(int_least64_t p, int_least64_t *c, int_least64_t *d)
         gcd_v(am, bm);
     }while(am[0] != 1);
     if(am[2] < 0)
-        am[2] += (p);
+        am[2] += p;
     *d = am[2];
-}
-
-void str2MD5(char *str, int length, uint8_t *digest)
-{
-    MD5_CTX hMD5;
-    MD5_Init(&hMD5);
-    MD5_Update(&hMD5, str, length);
-    MD5_Final(digest, &hMD5);
 }
 
 void make_sign_lgamal(char *in, char *out, int_least64_t p, int_least64_t x, int_least64_t g)
 {
-    uint8_t digest[MD5_DIGEST_LENGTH];
+    uint8_t digest[LENGTH];
     int_least64_t k, ink, r, u, s;
     char buffer[512];
     memset (buffer, 0, sizeof(buffer)); 
@@ -43,9 +33,9 @@ void make_sign_lgamal(char *in, char *out, int_least64_t p, int_least64_t x, int
     {
         if(fread(buffer, sizeof(char), 512, fin) != 512) 
             if(feof(fin)) flag = 0;
-        str2MD5(buffer, sizeof(buffer), digest);
+        str2(buffer, sizeof(buffer), digest);
     }
-    for (i = 0; i < MD5_DIGEST_LENGTH; i++)
+    for (i = 0; i < LENGTH; i++)
     {
         u = (digest[i] - x * r) % (p-1);
         if(u < 0)
@@ -59,8 +49,8 @@ void make_sign_lgamal(char *in, char *out, int_least64_t p, int_least64_t x, int
 
 void check_sign_lgamal(char *in, char *out, int_least64_t p, int_least64_t y, int_least64_t g)
 {
-    uint8_t digest[MD5_DIGEST_LENGTH];
-    int_least64_t r, s, test_sign[MD5_DIGEST_LENGTH];
+    uint8_t digest[LENGTH];
+    int_least64_t r, s, test_sign[LENGTH];
     char buffer[512];
     memset (buffer, 0, sizeof(buffer)); 
     int i = 0, flag = 1;
@@ -70,22 +60,22 @@ void check_sign_lgamal(char *in, char *out, int_least64_t p, int_least64_t y, in
     {
         if(fread(buffer, sizeof(char), 512, fin) != 512) 
             if(feof(fin)) flag = 0;
-        str2MD5(buffer, sizeof(buffer), digest);
+        str2(buffer, sizeof(buffer), digest);
     }
     while(fscanf(fout, "%"PRId64" %"PRId64, &r, &s) != EOF)
     {
         test_sign[i] = (modpow(y, r, p) * modpow(r, s, p)) % p;
         i++;
     }
-    for(i = 0; i < MD5_DIGEST_LENGTH; i++)
+    for(i = 0; i < LENGTH; i++)
     {
         if(test_sign[i] != modpow(g, digest[i], p))
         {
-            printf("ERROR\n");\
+            printf("ERROR\n");
             
         }
     }
-    for(i = 0; i < MD5_DIGEST_LENGTH; i++)
+    for(i = 0; i < LENGTH; i++)
         printf("%02x", digest[i]);
     printf("\n");
     fclose(fin);
