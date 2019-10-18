@@ -1,12 +1,20 @@
 LDIR=./lib
 CC=gcc
-CFLAGS= -Llib -lcrypto -lciphers -linfodef -lrandombytes -lm -Wall
+CFLAGS= -Wall
+LDFLAGS= -Llib -lcrypto -lciphers -linfodef -lrandombytes -lm
+TARGET=lgamal rsa gost
+HASH=5
 
-all: 11 22 33
-11:
-	$(CC) lgamal.c -o lgamal $(CFLAGS)
-22:
-	$(CC) rsa.c -o rsa $(CFLAGS)
-33:
-	$(CC) gost.c -o gost $(CFLAGS)
+.PHONY: all clean $(TARGET)
 
+default: $(TARGET) clean
+all: default
+
+%.o: %.c
+	$(CC) -DHASH=$(HASH) $(CFLAGS) -c $< -o $@
+
+$(TARGET): %: %.o
+	$(CC) $< $(LDFLAGS) -o $@
+
+clean:
+	-rm -f *.o
