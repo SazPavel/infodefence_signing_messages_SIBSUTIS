@@ -13,23 +13,64 @@
 #include <openssl/md5.h>
 #include <openssl/sha.h>
 
-#define MD5 0
-#define SHA256 1
-
-void str2(char *str, int length, uint8_t *digest)
-{
-#if MD5
-#define LENGTH MD5_DIGEST_LENGTH
-    MD5_CTX hMD5;
-    MD5_Init(&hMD5);
-    MD5_Update(&hMD5, str, length);
-    MD5_Final(digest, &hMD5);
-#elif SHA256
+#if HASH==256
 #define LENGTH SHA256_DIGEST_LENGTH
-    SHA256_CTX hSHA256;
-    SHA256_Init(&hSHA256);
-    SHA256_Update(&hSHA256, str, length);
-    SHA256_Final(digest, &hSHA256);
+SHA256_CTX hash;
+#elif HASH==224
+#define LENGTH SHA224_DIGEST_LENGTH
+SHA256_CTX hash;
+#elif HASH==512
+#define LENGTH SHA512_DIGEST_LENGTH
+SHA512_CTX hash;
+#elif HASH==384
+#define LENGTH SHA384_DIGEST_LENGTH
+SHA512_CTX hash;
+#else
+#define LENGTH MD5_DIGEST_LENGTH
+MD5_CTX hash;
+#endif
+
+void hash_init()
+{
+#if HASH==256
+    SHA256_Init(&hash);
+#elif HASH==224
+    SHA224_Init(&hash);
+#elif HASH==512
+    SHA512_Init(&hash);
+#elif HASH==384
+    SHA384_Init(&hash);
+#else
+    MD5_Init(&hash);
+#endif
+}
+
+void str2hash(char *str, int length, uint8_t *digest)
+{
+#if HASH==256
+    SHA256_Update(&hash, str, length);
+#elif HASH==224
+    SHA224_Update(&hash, str, length);
+#elif HASH==512
+    SHA512_Update(&hash, str, length);
+#elif HASH==384
+    SHA384_Update(&hash, str, length);
+#else
+    MD5_Update(&hash, str, length);
+#endif
+}
+
+void hash_finale(uint8_t *digest){
+#if HASH==256
+    SHA256_Final(digest, &hash);
+#elif HASH==224
+    SHA224_Final(digest, &hash);
+#elif HASH==512
+    SHA512_Final(digest, &hash);
+#elif HASH==384
+    SHA384_Final(digest, &hash);
+#else
+    MD5_Final(digest, &hash);
 #endif
 }
 

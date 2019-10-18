@@ -40,12 +40,14 @@ void make_sign_gost(char *in, char *out, int_least64_t p, int_least64_t q, int_l
     int i, flag = 1;
     FILE *fin = file_open(in, "r");
     FILE *fout = file_open(out, "w");
+    hash_init();
     while(flag)
     {
         if(fread(buffer, sizeof(char), 512, fin) != 512) 
             if(feof(fin)) flag = 0;
-        str2(buffer, sizeof(buffer), digest);
+        str2hash(buffer, sizeof(buffer), digest);
     }
+    hash_finale(digest);
     for (i = 0; i < LENGTH; i++)
     {
         while(cycle)
@@ -75,12 +77,14 @@ void check_sign_gost(char *in, char *out, int_least64_t p, int_least64_t q, int_
     int i = 0, flag = 1;
     FILE *fin = file_open(in, "r");
     FILE *fout = file_open(out, "r");
+    hash_init();
     while(flag)
     {
         if(fread(buffer, sizeof(char), 512, fin) != 512) 
             if(feof(fin)) flag = 0;
-        str2(buffer, sizeof(buffer), digest);
+        str2hash(buffer, sizeof(buffer), digest);
     }
+    hash_finale(digest);
     while(fscanf(fout, "%"PRId64" %"PRId64, &r, &s) != EOF)
     {
         if(r > q || s > q || r < 0 || s < 0)

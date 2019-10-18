@@ -8,12 +8,14 @@ void make_sign_rsa(char *in, char *out, int_least64_t c, int_least64_t n)
     int i, flag = 1;
     FILE *fin = file_open(in, "r");
     FILE *fout = file_open(out, "w");
+    hash_init();
     while(flag)
     {
         if(fread(buffer, sizeof(char), 512, fin) != 512) 
             if(feof(fin)) flag = 0;
-        str2(buffer, sizeof(buffer), digest);
+        str2hash(buffer, sizeof(buffer), digest);
     }
+    hash_finale(digest);
     for (i = 0; i < LENGTH; i++)
     {
         
@@ -32,12 +34,14 @@ void check_sign_rsa(char *in, char *out, int_least64_t d, int_least64_t n)
     int i = 0, flag = 1;
     FILE *fin = file_open(in, "r");
     FILE *fout = file_open(out, "r");
+    hash_init();
     while(flag)
     {
         if(fread(buffer, sizeof(char), 512, fin) != 512) 
             if(feof(fin)) flag = 0;
-        str2(buffer, sizeof(buffer), digest);
+        str2hash(buffer, sizeof(buffer), digest);
     }
+    hash_finale(digest);
     while(fscanf(fout, "%"PRId64, &tmp) != EOF)
     {
         test_sign[i] = (modpow(tmp, d, n));
