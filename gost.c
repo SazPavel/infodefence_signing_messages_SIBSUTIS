@@ -14,9 +14,47 @@ void inversion_generate(int_least64_t p, int_least64_t c, int_least64_t *d)
     *d = am[2];
 }
 
-void gost_generate(int_least64_t p, int_least64_t q, int_least64_t *a, int_least64_t *x, int_least64_t *y)
+void gost_generate_prime(int_least64_t *p, int_least64_t *q, int_least64_t *b)
 {
-    int_least64_t b = 2;
+    int flag = 1;
+    while(flag)
+    {
+        flag = 1;
+        while(1)
+        {
+            randombytes(p, sizeof(*p));
+            *p = fabs(*p % (int_least64_t)(((int_least64_t)2 << 30) - 1)) + ((int_least64_t)2 << 30);
+            if(prime_test(*p))
+                break;
+        }
+        while(1)
+        {
+            randombytes(q, sizeof(*q));
+            *q = fabs(*q % (int_least64_t)(((int_least64_t)2 << 14) - 1)) + ((int_least64_t)2 << 14);
+            if(prime_test(*q))
+                break;
+        }
+        while(flag && *q < (2 << 15))
+        {
+            *q += 2;
+            if(!prime_test(*q))
+                continue;
+            for(*b = 4; *b < *q; *b += 2)
+            {
+                if(*q * *b + 1  == *p)
+                {
+                    flag = 0;
+                    break;
+                }
+            }
+        }
+    }
+}
+
+
+
+void gost_generate(int_least64_t p, int_least64_t q, int_least64_t b, int_least64_t *a, int_least64_t *x, int_least64_t *y)
+{
     int_least64_t g;
     for(g = 2; g < p - 1; g += 1)
     {
@@ -53,7 +91,7 @@ void make_sign_gost(char *in, char *out, int_least64_t p, int_least64_t q, int_l
         while(cycle)
         {
             randombytes(&k, sizeof(k));
-            k = fabs(k % (int_least64_t)(q-2)) + 1;
+            k = fabs(k % (int_least64_t)(q-3)) + 2;
             r = modpow(a, k, p) % q;
             if(r == 0)
                 continue;
@@ -140,7 +178,7 @@ int main(int argc, char *argv[])
 {
     setlocale (LC_ALL, "Rus");
     int temp;
-    int_least64_t p, q, a, x, y;
+    int_least64_t p, q, a, x, y, b;
     if(argc < 3)
     {
         printf("example: ./gost filename command(1 - generate keys, 2 - encrypt, 3 - decrypt, 4 - all)\n");
@@ -150,9 +188,8 @@ int main(int argc, char *argv[])
     switch(temp)
     {
          case 1:
-            prime_safe_generate(&p, &q, 4294967295, 2147483648);
-            q = (p - 1)/2;
-            gost_generate(p, q, &a, &x, &y);
+            gost_generate_prime(&p, &q, &b);
+            gost_generate(p, q, b, &a, &x, &y);
             gost_save_private_key(p, q, a, x);
             gost_save_public_key(p, q, a, y);
             break;  
@@ -165,9 +202,8 @@ int main(int argc, char *argv[])
             check_sign_gost(argv[1], "tmp/sign_gost", p, q, a, y);
             break;
         case 4:
-            prime_safe_generate(&p, &q, 4294967295, 2147483648);
-            q = (p - 1)/2;
-            gost_generate(p, q, &a, &x, &y);
+            gost_generate_prime(&p, &q, &b);
+            gost_generate(p, q, b, &a, &x, &y);
             make_sign_gost(argv[1], "tmp/sign_gost", p, q, a, x);
             check_sign_gost(argv[1], "tmp/sign_gost", p, q, a, y);
             break;

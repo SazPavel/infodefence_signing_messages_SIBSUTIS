@@ -79,7 +79,8 @@ void check_sign_rsa(char *in, char *out, int_least64_t d, int_least64_t n);
 void make_sign_lgamal(char *in, char *out, int_least64_t p, int_least64_t x, int_least64_t g);
 void check_sign_lgamal(char *in, char *out, int_least64_t p, int_least64_t y, int_least64_t g);
 void inversion_generate(int_least64_t p, int_least64_t c, int_least64_t *d);
-void gost_generate(int_least64_t p, int_least64_t q, int_least64_t *a, int_least64_t *x, int_least64_t *y);
+void gost_generate_prime(int_least64_t *p, int_least64_t *q, int_least64_t *b);
+void gost_generate(int_least64_t p, int_least64_t q, int_least64_t b,int_least64_t *a, int_least64_t *x, int_least64_t *y);
 void make_sign_gost(char *in, char *out, int_least64_t p, int_least64_t q, int_least64_t a, int_least64_t x);
 void check_sign_gost(char *in, char *out, int_least64_t p, int_least64_t q, int_least64_t a, int_least64_t y);
 void gost_save_public_key(int_least64_t p, int_least64_t q, int_least64_t a, int_least64_t x);
@@ -87,5 +88,4 @@ void gost_save_private_key(int_least64_t p, int_least64_t q, int_least64_t a, in
 void gost_load_public_key(int_least64_t *p, int_least64_t *q, int_least64_t *a, int_least64_t *x);
 void gost_load_private_key(int_least64_t *p, int_least64_t *q, int_least64_t *a, int_least64_t *y);
 
-
-#endif 
+#endif

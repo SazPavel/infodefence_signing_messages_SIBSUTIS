@@ -18,7 +18,6 @@ void make_sign_rsa(char *in, char *out, int_least64_t c, int_least64_t n)
     hash_finale(digest);
     for (i = 0; i < LENGTH; i++)
     {
-        
         fprintf(fout, "%"PRId64" ", modpow(digest[i], c, n));
     }
     fclose(fin);
